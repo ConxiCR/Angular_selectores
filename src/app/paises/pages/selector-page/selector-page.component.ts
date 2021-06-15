@@ -1,7 +1,9 @@
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { PaisesService } from '../../services/paises.service';
+ 
+import { switchMap, tap } from 'rxjs/operators';
 
+import { PaisesService } from '../../services/paises.service';
 import { PaisSmall } from '../../interfaces/paises.interface';
 
 @Component({
@@ -28,7 +30,7 @@ export class SelectorPageComponent implements OnInit {
     this.regiones = this.paisesService.regiones;
 
     //cuando cambie la región
-    this.miFormulario.get('region')?.valueChanges
+   /* this.miFormulario.get('region')?.valueChanges
       .subscribe( region => {
         console.log(region)
 
@@ -37,6 +39,21 @@ export class SelectorPageComponent implements OnInit {
            console.log(paises)
            this.paises = paises;
          })
+      })*/
+    //utilización de operadores RXJS. código más limpio
+    this.miFormulario.get('region')?.valueChanges
+      
+      .pipe(
+        //_ no nos importa que hay, pero necesitamos que de paises y resetear paises que daba error
+        tap( (_) => {
+          this.miFormulario.get('pais')?.reset('');
+        }),
+        //devuelve paises de cada región
+        switchMap( region => this.paisesService.getPaisesPorRegion( region ))
+      )
+      .subscribe( paises => {
+        //console.log(paises);
+        this.paises = paises;
       })
 
   }
